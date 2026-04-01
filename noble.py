@@ -10,8 +10,6 @@ bot_token = '8604013302:AAHAZytEsZdTxyBlzn3-DsQuKjxEoc6jSL0'
 
 SOURCE_CHANNEL = 'A7maad_dev'
 BIG_CHANNEL = 'hvh32'
-
-# الحقوق اللي طلبتها
 MY_RIGHTS = "\n\n━━━━━━━━━━━━━━━\n✨ تم النشر بواسطة: **THAMERDEV**"
 
 client = TelegramClient('noble_session', api_id, api_hash)
@@ -24,33 +22,36 @@ async def handler(event):
             
             status_msg = await event.reply(f"🔍 جاري سحب الوصف الكامل لـ **{file_name}**...")
             
-            # تنظيف اسم الملف (نأخذ الحروف فقط)
+            # نأخذ الحروف فقط من اسم ملفك (infltr)
             clean_name = "".join(re.findall(r'[a-zA-Z]', file_name.rsplit('.', 1)[0])).lower()
-            # البحث بأول 3 حروف فقط (عشان يلقط الاسم حتى لو أحمد حاط رموز أو شرطات)
-            search_query = clean_name[:3] 
             
             final_caption = f"📱 تطبيق: **{file_name}**{MY_RIGHTS}"
             
             try:
-                # البحث في آخر 700 رسالة (بحث عميق جداً)
-                async for message in client.iter_messages(SOURCE_CHANNEL, limit=700):
-                    # سحب النص من الكابشن (تحت الصورة) أو الرسالة العادية
-                    full_text = (message.text or "") + (message.caption or "")
+                # بحث عميق جداً في آخر 800 منشور
+                async for message in client.iter_messages(SOURCE_CHANNEL, limit=800):
+                    # سحب كل النصوص الممكنة من المنشور
+                    texts = []
+                    if message.text: texts.append(message.text.lower())
+                    if message.caption: texts.append(message.caption.lower())
                     
-                    if full_text:
-                        # تحويل نص أحمد لحروف صغيرة للمطابقة
-                        target_text = full_text.lower()
+                    # إذا المنشور فيه نص
+                    if texts:
+                        full_msg_text = " ".join(texts)
+                        # تنظيف نص أحمد من كل الرموز للمطابقة
+                        clean_target = "".join(re.findall(r'[a-zA-Z]', full_msg_text))
                         
-                        # إذا لقى أول 3 حروف من اسم ملفك داخل نص أحمد
-                        if search_query in target_text:
-                            # ✅ يسحب الوصف كامل (العربي والإنجليزي)
-                            final_caption = full_text + MY_RIGHTS
-                            await status_msg.edit(f"✅ كفو! لقيت الوصف (صورة/نص)")
+                        # مطابقة مرنة: لو اسم ملفك موجود في نص أحمد
+                        if clean_name in clean_target or clean_name[:3] in clean_target:
+                            # نأخذ النص الأصلي (مو المنظف) عشان نحافظ على العربي والانجليزي
+                            actual_desc = message.text or message.caption
+                            final_caption = actual_desc + MY_RIGHTS
+                            await status_msg.edit(f"✅ تم العثور على الوصف الكامل!")
                             break
             except Exception as e:
                 print(f"Error: {e}")
 
-            # النشر السريع بالوصف الجديد
+            # النشر الفوري
             try:
                 await client.send_file(
                     BIG_CHANNEL, 

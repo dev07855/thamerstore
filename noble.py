@@ -9,7 +9,7 @@ bot_token = '8604013302:AAHAZytEsZdTxyBlzn3-DsQuKjxEoc6jSL0'
 TARGET_CHANNEL = 'hvh32'
 THAMER_ID = 5664150534
 
-# الوصف اللي طلبته
+# الوصف الموحد
 FIXED_DESCRIPTION = """
 🚀 **المصدر الأول في تطبيقات IPA**
 
@@ -28,7 +28,7 @@ FIXED_DESCRIPTION = """
 ✨ تم النشر بواسطة: **THAMERDEV**
 """
 
-# السشن None عشان يبدأ صفحة جديدة نظيفة
+# تشغيل بدون ملف سشن قديم
 client = TelegramClient(None, api_id, api_hash)
 
 @client.on(events.NewMessage(chats=THAMER_ID))
@@ -36,23 +36,18 @@ async def handler(event):
     if event.document:
         file_name = event.document.attributes[0].file_name
         if file_name.lower().endswith('.ipa'):
-            await event.reply(f"⏳ جاري نشر {file_name}...")
-            
-            caption = f"📱 تطبيق: **{file_name}**\n" + FIXED_DESCRIPTION
-            
+            await event.reply(f"⏳ جاري النشر...")
             try:
-                await client.send_file(TARGET_CHANNEL, event.media, caption=caption, parse_mode='md')
-                await event.reply("✅ تم النشر بنجاح!")
+                caption = f"📱 تطبيق: **{file_name}**\n" + FIXED_DESCRIPTION
+                await client.send_file(TARGET_CHANNEL, event.media, caption=caption)
+                await event.reply("✅ تم بنجاح!")
             except Exception as e:
                 await event.reply(f"❌ خطأ: {e}")
 
 async def main():
     await client.start(bot_token=bot_token)
-    print("🚀 البوت صحي وشغال!")
+    print("🚀 البوت شغال!")
     await client.run_until_disconnected()
 
 if __name__ == '__main__':
-    try:
-        asyncio.run(main())
-    except (KeyboardInterrupt, SystemExit):
-        pass
+    asyncio.run(main())

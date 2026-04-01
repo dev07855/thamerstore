@@ -1,31 +1,28 @@
 import os
 import zipfile
+import asyncio
 from telethon import TelegramClient, events
 
-# بياناتك الخاصة من تليجرام
+# بياناتك الخاصة
 api_id = 23882332
-api_hash = '1d515ac7bf517374b9ba740d8d74b3fd'
-# التوكن حقك من BotFather
+api_hash = '1d515ac7bf517374b9ba7c0d8d74b3fd'
 bot_token = '8604013302:AAHAZytEsZdTxyBlzn3-DsQuKjxEoc6jSL0'
 
-# قنواتك يا ثامر
-SOURCE_CHANNEL = 'A7maad_dev'  # القناة اللي يجيب منها الوصف والملف
-BIG_CHANNEL = 'hvh32'          # قناتك الكبيرة (الهدف)
+SOURCE_CHANNEL = 'A7maad_dev' 
+BIG_CHANNEL = 'hvh32'
 
-client = TelegramClient('noble_session', api_id, api_hash).start(bot_token=bot_token)
+# إنشاء العميل
+client = TelegramClient('noble_session', api_id, api_hash)
 
 @client.on(events.NewMessage(chats=SOURCE_CHANNEL))
 async def handler(event):
-    # إذا الرسالة فيها ملف IPA أو ملف داتا
     if event.document:
         file_name = event.document.attributes[0].file_name if event.document.attributes else "file.ipa"
-        print(f"🔎 جاري سحب تطبيق جديد: {file_name}")
+        print(f"🔎 سحب تطبيق: {file_name}")
         
-        # تحميل الملف والوصف الأصلي
         caption = event.message.message
         path = await event.download_media()
         
-        # محاولة ذكية لسحب أيقونة التطبيق (عشان المنشور يطلع فخم)
         thumb_path = "thumb.png"
         found_thumb = False
         try:
@@ -38,18 +35,17 @@ async def handler(event):
                         found_thumb = True
         except: pass
 
-        # إرسال الملف لقناتك hvh32 مع الوصف والأيقونة
-        await client.send_file(
-            BIG_CHANNEL, 
-            path, 
-            caption=caption, 
-            thumb=thumb_path if found_thumb else None
-        )
-        print(f"✅ تم نقل {file_name} بنجاح إلى قناتك الكبيرة")
+        await client.send_file(BIG_CHANNEL, path, caption=caption, thumb=thumb_path if found_thumb else None)
         
-        # تنظيف السيرفر
         if os.path.exists(path): os.remove(path)
         if os.path.exists(thumb_path): os.remove(thumb_path)
 
-print("🚀 بوت نوبل ستار شغال الحين ويراقب القنوات...")
-client.run_until_disconnected()
+# الدالة الأساسية للتشغيل لتجنب خطأ الـ Loop
+async def main():
+    await client.start(bot_token=bot_token)
+    print("🚀 بوت نوبل ستار شغال الآن...")
+    await client.run_until_disconnected()
+
+# تشغيل البوت بالطريقة الصحيحة للسيرفرات
+if name == 'main':
+    asyncio.run(main())

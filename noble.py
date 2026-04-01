@@ -1,5 +1,5 @@
-from telethon import TelegramClient, events
 import asyncio
+from telethon import TelegramClient, events
 
 # بياناتك
 api_id = 23882332
@@ -9,7 +9,7 @@ bot_token = '8604013302:AAHAZytEsZdTxyBlzn3-DsQuKjxEoc6jSL0'
 TARGET_CHANNEL = 'hvh32'
 THAMER_ID = 5664150534
 
-# الوصف الموحد اللي طلبته
+# الوصف اللي طلبته
 FIXED_DESCRIPTION = """
 🚀 **المصدر الأول في تطبيقات IPA**
 
@@ -28,7 +28,7 @@ FIXED_DESCRIPTION = """
 ✨ تم النشر بواسطة: **THAMERDEV**
 """
 
-# استخدمنا None للسشن عشان يشتغل فوراً وما يعلق على ملفات قديمة
+# السشن None عشان يبدأ صفحة جديدة نظيفة
 client = TelegramClient(None, api_id, api_hash)
 
 @client.on(events.NewMessage(chats=THAMER_ID))
@@ -36,7 +36,6 @@ async def handler(event):
     if event.document:
         file_name = event.document.attributes[0].file_name
         if file_name.lower().endswith('.ipa'):
-            # رسالة استجابة فورية
             await event.reply(f"⏳ جاري نشر {file_name}...")
             
             caption = f"📱 تطبيق: **{file_name}**\n" + FIXED_DESCRIPTION
@@ -47,11 +46,13 @@ async def handler(event):
             except Exception as e:
                 await event.reply(f"❌ خطأ: {e}")
 
-# تشغيل بسيط جداً ومباشر
 async def main():
     await client.start(bot_token=bot_token)
-    print("✅ البوت رجع يشتغل مثل أول..")
+    print("🚀 البوت صحي وشغال!")
     await client.run_until_disconnected()
 
 if __name__ == '__main__':
-    asyncio.run(main())
+    try:
+        asyncio.run(main())
+    except (KeyboardInterrupt, SystemExit):
+        pass

@@ -8,11 +8,8 @@ api_id = 23882332
 api_hash = '1d515ac7bf517374b9ba7c0d8d74b3fd'
 bot_token = '8604013302:AAHAZytEsZdTxyBlzn3-DsQuKjxEoc6jSL0'
 
-# القنوات (تم تعديل الآيدي الرقمي بناءً على الصورة)
-SOURCE_ID = -1002266265804  # أيدي قناة نوبل ستار تحديثات
+SOURCE_ID = -1002266265804  # نوبل ستار
 BIG_CHANNEL = 'hvh32'        # القناة الكبيرة
-
-# حقوقك
 MY_RIGHTS = "\n\n━━━━━━━━━━━━━━━\n✨ تم النشر بواسطة: **THAMERDEV**"
 
 client = TelegramClient('noble_session', api_id, api_hash)
@@ -23,50 +20,62 @@ async def handler(event):
         file_name = event.document.attributes[0].file_name
         if file_name.lower().endswith('.ipa'):
             
-            status_msg = await event.reply(f"🔍 جاري مطابقة ملف **{file_name}** مع تحديثات نوبل ستار...")
+            # رسالة تنبيه تفاعلية
+            status_msg = await event.reply(f"⏳ جاري البحث العميق في أرشيف @NOPELSTAR... لـ **{file_name}**")
             
-            # تنظيف اسم الملف وتقسيمه لكلمات للبحث المرن
-            clean_name = re.sub(r'[^a-zA-Z0-9]', ' ', file_name.rsplit('.', 1)[0]).lower()
+            # تنظيف الاسم (Life Sim 3D -> life, sim)
+            clean_name = re.sub(r'([a-z])([A-Z])', r'\1 \2', file_name.rsplit('.', 1)[0])
+            clean_name = re.sub(r'[^a-zA-Z0-9]', ' ', clean_name).lower()
             keywords = [w for w in clean_name.split() if len(w) > 2]
             
             final_caption = f"📱 تطبيق: **{file_name}**{MY_RIGHTS}"
             found = False
             
             try:
-                # البحث في القناة باستخدام الآيدي الرقمي (أضمن طريقة)
-                async for message in client.iter_messages(SOURCE_ID, limit=800):
-                    # سحب النص سواء كان رسالة أو كابشن تحت صورة التحديث
-                    text_content = (message.text or "") + (message.caption or "")
+                # --- البحث المتعمق بنظام المجموعات ---
+                offset_id = 0
+                search_limit = 1000 # بنفحص آخر 1000 رسالة بدقة
+                
+                while offset_id < search_limit:
+                    # جلب الرسائل 100 بـ 100 عشان ما "يهنق" البحث
+                    messages = await client.get_messages(SOURCE_ID, limit=100, offset_id=offset_id)
+                    if not messages:
+                        break
                     
-                    if text_content:
-                        # إذا وجد أي كلمة من اسم الملف داخل نص التحديث
-                        for word in keywords:
-                            if word in text_content.lower():
+                    for message in messages:
+                        text_content = (message.text or "") + (message.caption or "")
+                        if text_content:
+                            # فحص كل كلمة من اسم الملف داخل نص القناة
+                            match_count = 0
+                            for word in keywords:
+                                if word in text_content.lower():
+                                    match_count += 1
+                            
+                            # إذا لقى أي كلمة مطابقة (مثل Life أو Sim)
+                            if match_count >= 1:
                                 final_caption = text_content + MY_RIGHTS
                                 found = True
                                 break
+                    
                     if found: break
+                    offset_id += len(messages)
+                    await asyncio.sleep(0.5) # راحة بسيطة للسيرفر عشان ما ينحظر
+                            
             except Exception as e:
-                print(f"Error: {e}")
+                print(f"Error in search: {e}")
 
-            # النشر الفوري
+            # النشر النهائي
             try:
-                await client.send_file(
-                    BIG_CHANNEL, 
-                    event.message.media, 
-                    caption=final_caption,
-                    parse_mode='md'
-                )
+                await client.send_file(BIG_CHANNEL, event.message.media, caption=final_caption, parse_mode='md')
                 if found:
-                    await status_msg.edit(f"✅ تم سحب وصف التحديث بنجاح من نوبل ستار!")
+                    await status_msg.edit(f"✅ تم النشر بنجاح مع الوصف المستخرج!")
                 else:
-                    await status_msg.edit(f"⚠️ لم أجد إعلان تحديث مطابق، تم النشر بالاسم فقط.")
+                    await status_msg.edit(f"⚠️ بحثت في آخر 1000 منشور ولم أجد وصفاً مطابقاً.")
             except Exception as e:
-                await status_msg.edit(f"❌ خطأ في النشر: {e}")
+                await status_msg.edit(f"❌ خطأ: {e}")
 
 async def main():
     await client.start(bot_token=bot_token)
-    print("🚀 بوت THAMERDEV يعمل الآن بنظام الآيدي الرقمي...")
     await client.run_until_disconnected()
 
 if __name__ == '__main__':

@@ -1,4 +1,4 @@
-طfrom telethon import TelegramClient, events, Button
+from telethon import TelegramClient, events, Button
 import asyncio
 
 # بياناتك

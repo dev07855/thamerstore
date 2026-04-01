@@ -1,7 +1,7 @@
-from telethon import TelegramClient, events, Button
 import asyncio
+from telethon import TelegramClient, events
 
-# بياناتك
+# بياناتك الأساسية
 api_id = 23882332
 api_hash = '1d515ac7bf517374b9ba7c0d8d74b3fd'
 bot_token = '8604013302:AAHAZytEsZdTxyBlzn3-DsQuKjxEoc6jSL0'
@@ -9,35 +9,58 @@ bot_token = '8604013302:AAHAZytEsZdTxyBlzn3-DsQuKjxEoc6jSL0'
 TARGET_CHANNEL = 'hvh32'
 THAMER_ID = 5664150534
 
-# تشغيل العميل
+# الوصف اللي اخترته أنت يا ثامر
+FIXED_DESCRIPTION = """
+🚀 **المصدر الأول في تطبيقات IPA**
+
+🔹 **مميزات تعمل:**
+- جميع المميزات الأساسية مفعلة.
+- باقي المميزات استكشفها بنفسك داخل التطبيق.
+
+⚠️ **ملاحظة:**
+أي مشاكل تظهر لا تتردد في التواصل معنا.
+عزيزي اذكر المصدر عند تحويل لقناتك 🌹
+
+💎 **خدماتنا:**
+يتوفر لدينا متجر البلس وشهادات لتثبيت IPA.
+
+━━━━━━━━━━━━━━━
+✨ تم النشر بواسطة: **THAMERDEV**
+"""
+
 client = TelegramClient('bot_session', api_id, api_hash)
 
 @client.on(events.NewMessage(chats=THAMER_ID))
 async def handler(event):
-    if event.document:
+    if event.is_private and event.document:
         file_name = event.document.attributes[0].file_name
+        
         if file_name.lower().endswith('.ipa'):
-            # أول ما يوصل الملف بيرد عليك فوراً
-            await event.reply(f"✅ أبشر يا ثامر، جاري رفع ونشر: {file_name}")
-
-            caption = f"📱 تطبيق: **{file_name}**\n\n🚀 المصدر الأول في تطبيقات IPA\n⚠️ اذكر المصدر عند التحويل\n━━━━━━━━━━━━━━━\n✨ بواسطة: **THAMERDEV**"
+            # رسالة انتظار بسيطة
+            status = await event.reply(f"⏳ جاري نشر {file_name}...")
             
-            buttons = [
-                [Button.inline("📥 سجل تحميلك هنا", data="ignore")],
-                [Button.inline("⭐ قيم بـ 5 نجوم", data="ignore")]
-            ]
-
+            # دمج اسم التطبيق مع الوصف الموحد
+            final_caption = f"📱 تطبيق: **{file_name}**\n" + FIXED_DESCRIPTION
+            
             try:
-                await client.send_file(TARGET_CHANNEL, event.media, caption=caption, buttons=buttons)
-                await event.reply("🔥 تم النشر في القناة بنجاح!")
+                await client.send_file(
+                    TARGET_CHANNEL, 
+                    event.media, 
+                    caption=final_caption,
+                    parse_mode='md'
+                )
+                await status.edit("✅ تم النشر بنجاح في القناة.")
             except Exception as e:
-                await event.reply(f"❌ فشل النشر: {str(e)}")
+                await status.edit(f"❌ خطأ أثناء النشر: {str(e)}")
 
-@client.on(events.CallbackQuery)
-async def callback(event):
-    await event.answer("✅ تم تسجيل تفاعلك!")
+async def main():
+    await client.start(bot_token=bot_token)
+    print("🚀 البوت شغال بالوصف الموحد وبدون أخطاء...")
+    await client.run_until_disconnected()
 
-# التشغيل النهائي
-print("🚀 البوت حي الآن واستجابته سريعة...")
-client.start(bot_token=bot_token)
-client.run_until_disconnected()
+if __name__ == '__main__':
+    # تشغيل آمن ومستقر يتوافق مع بايثون 3.14
+    try:
+        asyncio.run(main())
+    except (KeyboardInterrupt, SystemExit):
+        pass

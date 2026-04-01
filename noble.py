@@ -1,7 +1,5 @@
-import os
+طfrom telethon import TelegramClient, events, Button
 import asyncio
-import re
-from telethon import TelegramClient, events, Button
 
 # بياناتك
 api_id = 23882332
@@ -11,42 +9,35 @@ bot_token = '8604013302:AAHAZytEsZdTxyBlzn3-DsQuKjxEoc6jSL0'
 TARGET_CHANNEL = 'hvh32'
 THAMER_ID = 5664150534
 
-# إنشاء العميل
+# تشغيل العميل
 client = TelegramClient('bot_session', api_id, api_hash)
 
-@client.on(events.NewMessage)
+@client.on(events.NewMessage(chats=THAMER_ID))
 async def handler(event):
-    # حماية: فقط ثامر ينشر
-    if event.sender_id != THAMER_ID:
-        return
-
-    if event.is_private and event.document:
+    if event.document:
         file_name = event.document.attributes[0].file_name
-        
         if file_name.lower().endswith('.ipa'):
-            await event.reply("✅ استلمت الملف يا ثامر، جاري النشر بالأزرار...")
+            # أول ما يوصل الملف بيرد عليك فوراً
+            await event.reply(f"✅ أبشر يا ثامر، جاري رفع ونشر: {file_name}")
 
             caption = f"📱 تطبيق: **{file_name}**\n\n🚀 المصدر الأول في تطبيقات IPA\n⚠️ اذكر المصدر عند التحويل\n━━━━━━━━━━━━━━━\n✨ بواسطة: **THAMERDEV**"
             
             buttons = [
-                [Button.inline("📥 سجل تحميلك هنا", data=f"dl_{file_name}")],
-                [Button.inline("⭐ قيم 5 نجوم", data=f"rate_{file_name}")]
+                [Button.inline("📥 سجل تحميلك هنا", data="ignore")],
+                [Button.inline("⭐ قيم بـ 5 نجوم", data="ignore")]
             ]
 
             try:
-                await client.send_file(TARGET_CHANNEL, event.media, caption=caption, buttons=buttons, parse_mode='md')
+                await client.send_file(TARGET_CHANNEL, event.media, caption=caption, buttons=buttons)
                 await event.reply("🔥 تم النشر في القناة بنجاح!")
             except Exception as e:
-                await event.reply(f"❌ خطأ: {e}")
+                await event.reply(f"❌ فشل النشر: {str(e)}")
 
-# الطريقة الجديدة والوحيدة لتشغيل البوت في بايثون 3.14
-async def start_bot():
-    await client.start(bot_token=bot_token)
-    print("🚀 البوت يعمل بنجاح...")
-    await client.run_until_disconnected()
+@client.on(events.CallbackQuery)
+async def callback(event):
+    await event.answer("✅ تم تسجيل تفاعلك!")
 
-if __name__ == '__main__':
-    try:
-        asyncio.run(start_bot())
-    except (KeyboardInterrupt, SystemExit):
-        pass
+# التشغيل النهائي
+print("🚀 البوت حي الآن واستجابته سريعة...")
+client.start(bot_token=bot_token)
+client.run_until_disconnected()

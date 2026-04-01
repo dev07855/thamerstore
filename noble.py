@@ -9,45 +9,48 @@ api_hash = '1d515ac7bf517374b9ba7c0d8d74b3fd'
 bot_token = '8604013302:AAHAZytEsZdTxyBlzn3-DsQuKjxEoc6jSL0'
 
 # القنوات
-SOURCE_CHANNEL = 'NOPELSTAR'  # قناتك اللي فيها الوصف المرتب
-BIG_CHANNEL = 'hvh32'         # قناتك الكبيرة للنشر
+SOURCE_CHANNEL = 'NOPELSTAR'  # قناة إعلانات التحديث (صور ونصوص)
+BIG_CHANNEL = 'hvh32'         # قناة نشر ملفات الـ IPA
 
-# حقوقك
+# توقيعك الفخم
 MY_RIGHTS = "\n\n━━━━━━━━━━━━━━━\n✨ تم النشر بواسطة: **THAMERDEV**"
 
 client = TelegramClient('noble_session', api_id, api_hash)
 
 @client.on(events.NewMessage)
 async def handler(event):
+    # البوت يشتغل لما ترسل له ملف IPA في الخاص
     if event.document and event.document.attributes:
         file_name = event.document.attributes[0].file_name
         if file_name.lower().endswith('.ipa'):
             
-            status_msg = await event.reply(f"🔍 جاري سحب الوصف المرتب لـ **{file_name}**...")
+            status_msg = await event.reply(f"🔍 جاري مطابقة ملف **{file_name}** مع إعلانات التحديث في @{SOURCE_CHANNEL}...")
             
-            # 1. تنظيف اسم الملف وتقسيمه (مثلاً City of Dragons)
-            # بيشيل الرموز ويقسم الكلمات حتى لو كانت لازقة مثل CityOfDragons
-            clean_name = re.sub(r'([a-z])([A-Z])', r'\1 \2', file_name.rsplit('.', 1)[0]) # فك الكلمات الملتصقة
-            clean_name = re.sub(r'[^a-zA-Z0-9]', ' ', clean_name)
-            keywords = [word.lower() for word in clean_name.split() if len(word) > 2]
+            # 1. استخراج كلمات البحث من اسم الملف (مثلاً: CityOfDragons -> city, dragons)
+            clean_name = re.sub(r'([a-z])([A-Z])', r'\1 \2', file_name.rsplit('.', 1)[0])
+            clean_name = re.sub(r'[^a-zA-Z0-9]', ' ', clean_name).lower()
+            keywords = [w for w in clean_name.split() if len(w) > 2]
             
+            # الوصف الافتراضي إذا ما لقى إعلان
             final_caption = f"📱 تطبيق: **{file_name}**{MY_RIGHTS}"
             found = False
             
             try:
-                # البحث في آخر 800 رسالة في نوبل ستار
-                async for message in client.iter_messages(SOURCE_CHANNEL, limit=800):
+                # 2. البحث في منشورات (الصور والنصوص) في نوبل ستار
+                async for message in client.iter_messages(SOURCE_CHANNEL, limit=600):
+                    # سحب النص من المنشور (سواء كان نص عادي أو نص تحت صورة)
                     full_text = (message.text or "") + (message.caption or "")
                     
                     if full_text:
-                        # المطابقة: لازم نلقى أول كلمتين من اسم الملف داخل المنشور
+                        # المطابقة: نبحث عن كلمات اسم الملف داخل إعلان التحديث
                         match_count = 0
-                        for word in keywords[:3]: # فحص أول 3 كلمات من الاسم
+                        for word in keywords:
                             if word in full_text.lower():
                                 match_count += 1
                         
-                        # إذا لقى تطابق قوي (كلمتين أو أكثر)
+                        # إذا لقى كلمة أو أكثر (مثلاً لقى "Dragons" في بوستر التحديث)
                         if match_count >= 1:
+                            # ✅ يسحب وصف التحديث كامل (العربي والانجليزي)
                             final_caption = full_text + MY_RIGHTS
                             found = True
                             break
@@ -55,11 +58,11 @@ async def handler(event):
                 print(f"Error: {e}")
 
             if found:
-                await status_msg.edit(f"✅ تم سحب الوصف بنجاح من نوبل ستار!")
+                await status_msg.edit(f"✅ تم العثور على إعلان التحديث وسحب الوصف!")
             else:
-                await status_msg.edit(f"⚠️ لم أجد وصفاً مطابقاً بدقة، سيتم النشر بالاسم فقط.")
+                await status_msg.edit(f"⚠️ لم أجد إعلان تحديث لهذا التطبيق في نوبل ستار.")
 
-            # النقل الفوري للقناة الكبيرة
+            # 3. إرسال ملف الـ IPA للقناة الكبيرة بالوصف الجديد
             try:
                 await client.send_file(
                     BIG_CHANNEL, 
@@ -67,12 +70,13 @@ async def handler(event):
                     caption=final_caption,
                     parse_mode='md'
                 )
-                await status_msg.edit(f"✅ تم النشر في @{BIG_CHANNEL}")
+                await status_msg.edit(f"✅ تم النشر بنجاح في @{BIG_CHANNEL}")
             except Exception as e:
-                await status_msg.edit(f"❌ خطأ: {e}")
+                await status_msg.edit(f"❌ خطأ أثناء النقل: {e}")
 
 async def main():
     await client.start(bot_token=bot_token)
+    print("🚀 بوت THAMERDEV جاهز لمطابقة التحديثات...")
     await client.run_until_disconnected()
 
 if __name__ == '__main__':

@@ -22,7 +22,19 @@ async def handler(event):
         if file_name.lower().endswith('.ipa'):
             await event.reply(f"✅ تم استلام {file_name}.. جاري النشر بالقناة")
             try:
-                caption = f"📱 تطبيق: **{file_name}**\n\n🛡️ بواسطة: **THAMERDEV**"
+                caption = f"ا🚀 **المصدر الأول في تطبيقات IPA**
+
+🔹 **مميزات تعمل:**
+- جميع المميزات الأساسية مفعلة.
+- باقي المميزات استكشفها بنفسك داخل التطبيق.
+
+⚠️ **ملاحظة:**
+أي مشاكل تظهر لا تتردد في التواصل معنا.
+عزيزي اذكر المصدر عند تحويل لقناتك 🌹
+
+💎 **خدماتنا:**
+يتوفر لدينا متجر البلس وشهادت لتثبيت IPA.
+📱 تطبيق: **{file_name}**\n\n🛡️ بواسطة: **THAMERDEV**"
                 await client.send_file(TARGET_CHANNEL, event.media, caption=caption)
                 print(f"🚀 تم الإرسال للقناة بنجاح!")
             except Exception as e:

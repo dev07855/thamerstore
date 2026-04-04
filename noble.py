@@ -11,16 +11,8 @@ THAMER_ID = 5664150534
 
 client = TelegramClient(None, api_id, api_hash)
 
-@client.on(events.NewMessage(chats=THAMER_ID))
-async def handler(event):
-    if event.document:
-        file_name = event.document.attributes[0].file_name
-        if file_name.lower().endswith('.ipa'):
-            await event.reply(f"⏳ جاري النشر...")
-            try:
-                # الوصف اللي طلبته بالضبط دمجته هنا
-                caption = f"""📱 تطبيق: **{file_name}**
-
+# الوصف المعتمد - تأكدت إنه مقفل صح
+FIXED_DESCRIPTION = """
 🚀 **المصدر الأول في تطبيقات IPA**
 
 🔹 **مميزات تعمل:**
@@ -35,8 +27,21 @@ async def handler(event):
 يتوفر لدينا متجر البلس وشهادات لتثبيت IPA.
 
 ━━━━━━━━━━━━━━━
-✨ تم النشر بواسطة: **THAMERDEV** 🛡️"""
+✨ تم النشر بواسطة: **THAMERDEV** 🛡️
+"""
 
+@client.on(events.NewMessage(chats=THAMER_ID))
+async def handler(event):
+    if event.document:
+        file_name = "تطبيق جديد"
+        for attr in event.document.attributes:
+            if hasattr(attr, 'file_name'):
+                file_name = attr.file_name
+        
+        if file_name.lower().endswith('.ipa'):
+            await event.reply(f"⏳ جاري النشر...")
+            try:
+                caption = f"📱 تطبيق: **{file_name}**\n" + FIXED_DESCRIPTION
                 await client.send_file(TARGET_CHANNEL, event.media, caption=caption)
                 await event.reply("✅ تم بنجاح!")
             except Exception as e:
@@ -44,7 +49,7 @@ async def handler(event):
 
 async def main():
     await client.start(bot_token=bot_token)
-    print("🚀 البوت شغال ونظيف.. بانتظار ملفات الـ IPA")
+    print("🚀 البوت شغال وجاهز!")
     await client.run_until_disconnected()
 
 if __name__ == '__main__':
